@@ -1,7 +1,7 @@
-import './QQMap.scss';
-import QQMap from './QQMap.jsx';
+import './Map.scss';
+import Map from './Map.jsx';
 import Marker from './Marker';
 
-QQMap.Marker = Marker;
+Map.Marker = Marker;
 
-export default QQMap;
+export default Map;

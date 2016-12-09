@@ -1,42 +1,54 @@
 
 import React, { Component, PropTypes } from 'react';
 import classnames from 'classnames';
+import LoadJs from './utils/loadJS'
 
-class QQMap extends Component {
+// 地图类型(街道、卫星图像、卫星图像上的主要街道透明层)
+const MAPE_TYPES = {'1': 'ROADMAP', '2': 'SATELLITE', '3': 'HYBRID'};
 
+class Map extends Component {
+  
   constructor(props) {
     super(props);
   }
 
-  componentDidMount(){
-    
-    // 创建地图
-    this.createMap();
-    this.setCenter();
-    //this.setLocation();
-  }
 
+
+  componentDidMount() {
+    let url = 'https://apis.map.qq.com/api/js?v=2.exp&s=1&libraries=convertor,geometry&callback=init';
+    this.props.key && (url += `&key=${this.props.key}`)
+    LoadJs(url)
+    window.init = () => {
+      this.createMap();
+      this.setCenter();
+    }
+  }
   componentDidUpdate() {
     // 创建地图
     this.createMap();
     this.setCenter();
   }
+  render () {
+
+    const {
+      width, // 地图宽度
+      height, //地图高度（必填）
+      mapTypeId,//地图类型
+      className,
+      centerIndex, // 地图中心的坐标点
+      ...others
+    } = this.props;
 
 
-
-  render () { 
-    const { className, visible, children, selected, ...others } = this.props;
-    
     const cls = classnames({
       'comp-qqmap'          : true,
       [className]        : !!className,
     });
     return (
-      <div ref="map" className={cls} {...others} style={{display: (visible ? 'block' : 'none')}}>
+      <div ref="map" className={cls} {...others} style={{width: width, height: height}}>
       </div>
     );
   }
-
   createMap() {
     // 获取坐标数据数组
     let lnglats = [];
@@ -84,9 +96,10 @@ class QQMap extends Component {
     if (!this.map) {
       this.map = new qq.maps.Map(this.refs.map, {
         zoomControl: false,
-        mapTypeId: qq.maps.MapTypeId.ROADMAP,
+        mapTypeId: qq.maps.MapTypeId[MAPE_TYPES[this.props.mapTypeId]],
         center: new qq.maps.LatLng(cenLat, cenLng),
-        zoom: getZoom(maxLat, minLat, maxLng, minLng) // 计算缩放级别
+        zoom: getZoom(maxLat, minLat, maxLng, minLng),// 计算缩放级别
+        backgroundColor: '#fff'
       });
     }
     if (localStorage.locateInfo && !this.marker) { 
@@ -97,7 +110,7 @@ class QQMap extends Component {
         size = new qq.maps.Size(50, 50),
         origin = new qq.maps.Point(0, 0),
         icon = new qq.maps.MarkerImage(
-            require("../../../images/locate.png"),
+            require("./locate.png"),
             size,
             origin,
             anchor
@@ -117,39 +130,24 @@ class QQMap extends Component {
       //     offset:new qq.maps.Size(-15,-25)
       // });
     }
-
     lnglats.map((item, index) => {
       // /*标注*/
-      // new qq.maps.Marker({
-      //     position: new qq.maps.LatLng(item.lat, item.lng),
-      //     draggable: false,/*拖动*/
-      //     map: map
-      // });
+      new qq.maps.Marker({
+          position: new qq.maps.LatLng(item.lat, item.lng),
+          draggable: false,/*拖动*/
+          map: this.map
+      });
       /*标注Label*/
-      new qq.maps.Label({
+      item.label && new qq.maps.Label({
           position: new qq.maps.LatLng(item.lat, item.lng),
           map: this.map,
           content: item.label,
-          style:{color:"#fff",fontSize:"14px",padding: "0px 0px 0px 2px", border: "2px solid #fff", backgroundColor: (this.props.selected == index ? '#e93a3a' : '#3386ff'), width: "24px", height: "24px", borderRadius: "50%", zIndex: "999" },
-          offset:new qq.maps.Size(-15,-25)
+          style:{borderBottomRightRadius: '5px', borderTopLeftRadius: '5px'},
+          offset:new qq.maps.Size(15,-30)
       });
     });
     
   }
-
-  // setLocation() {
-  //   if () {
-  //      /*标注*/
-  //     new qq.maps.Marker({
-  //         position: this.props.locateInfo,
-  //         draggable: false,/*拖动*/
-  //         map: this.map
-  //     });
-  //     this.isSetLocation = true;
-  //   }
-  // }
-
-
   setCenter() {
     React.Children.map(this.props.children, (child, index) => {
       if (index == this.props.selected) {
@@ -157,19 +155,21 @@ class QQMap extends Component {
       }
     })
   }
-
 }
 
-
-
-
-QQMap.propTypes = {
+Map.propTypes = {
   key      : PropTypes.string,
   className : PropTypes.string,
 };
 
-QQMap.defaultProps = {
-  className : null,
+Map.defaultProps = {
+  key: '',                              // 付费密钥
+  className : null,                     // 地图容器样式
+  width: '100%',                        // 地图容器宽度
+  height: 300,                          // 地图容器高度
+  mapTypeId: 1,                         // 地图类型
+  centerIndex: 0,                       // 地图中心
+
 };
 
-export default QQMap;
+export default Map;
