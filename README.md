@@ -13,7 +13,14 @@
 
 - Install with [NPM](https://npmjs.com): `npm install reactmap`.
 
+  ```
+    <Map visible={true} height="300" selected={1}>
+      <Map.Marker lat="31.241402867905614" lng="121.4529219996628" label='协进大楼1'></Map.Marker>
+      <Map.Marker lat="31.23630944041476" lng="121.49141501957922" label='协进大楼2'></Map.Marker>
+    </Map>
+  ```
 
+  
 
 
 
